@@ -1,5 +1,7 @@
 # Library Management Showcase
 
+![Library Management Cover](docs/screenshots/repo-cover.png)
+
 Public showcase repository for the **Library Management System** desktop project.
 
 ## At A Glance
