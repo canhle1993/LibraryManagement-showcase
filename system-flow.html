@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Management System — System Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0b0f1c;
+      color: #dce4f5;
+      padding: 40px 28px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.1rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #7cc7ff, #a78bfa, #63e6a7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #7a8aaa;
+      font-size: 0.92rem;
+      margin-bottom: 48px;
+      letter-spacing: 0.2px;
+    }
+
+    .toc {
+      background: #11172a;
+      border: 1px solid #1f2e4d;
+      border-radius: 14px;
+      padding: 22px 32px;
+      margin-bottom: 40px;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .toc h3 {
+      font-size: 0.88rem;
+      color: #7a8aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .toc ol {
+      padding-left: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 24px;
+    }
+
+    .toc li {
+      font-size: 0.88rem;
+      color: #aab8d8;
+    }
+
+    .toc a {
+      color: #7cc7ff;
+      text-decoration: none;
+    }
+
+    .toc a:hover { text-decoration: underline; }
+
+    .section {
+      background: #111827;
+      border: 1px solid #1e2c46;
+      border-radius: 18px;
+      padding: 30px 36px;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+
+    .section h2 {
+      font-size: 1.06rem;
+      font-weight: 700;
+      margin-bottom: 22px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e2c46;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #dce4f5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 11px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .badge-staff   { background: #142a47; color: #7cc7ff; }
+    .badge-admin   { background: #27174a; color: #c4a0ff; }
+    .badge-system  { background: #122e22; color: #63e6a7; }
+    .badge-data    { background: #3a2c0e; color: #ffd46a; }
+    .badge-payment { background: #2c1c10; color: #ffa76a; }
+
+    .mermaid { width: 100%; overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<h1>📚 Library Management System — System Flow</h1>
+<p class="subtitle">Java SE 21 · Swing · SQL Server · Apache POI · JasperReports · ZXing · Vbee TTS API · JavaCV</p>
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#auth">Authentication &amp; Approval</a></li>
+    <li><a href="#rental">Book Rental Flow</a></li>
+    <li><a href="#return">Book Return &amp; Fine</a></li>
+    <li><a href="#payment">Payment Flow</a></li>
+    <li><a href="#book">Book Management</a></li>
+    <li><a href="#student">Student Management</a></li>
+    <li><a href="#warehouse">Warehouse &amp; QR Flow</a></li>
+    <li><a href="#location">Location Management</a></li>
+    <li><a href="#damage">Damage &amp; Recycle</a></li>
+    <li><a href="#chart">Charts &amp; Reports</a></li>
+    <li><a href="#admin">Admin Module Overview</a></li>
+    <li><a href="#db">Database Relationships</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. AUTH FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="auth">
+  <h2>🔐 Authentication &amp; Approval Flow <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+flowchart LR
+    START([Launch App]) --> SPLASH["Splash / Logo screen\n3-second animation"]
+    SPLASH --> LOGIN_SCREEN["Login &amp; Register screen\nPanelCover + PanelLoginRegister"]
+
+    LOGIN_SCREEN --> ACT{"Choose action"}
+
+    ACT -- "Login" --> CRED["Enter email + password"]
+    CRED --> BCRYPT{"BCrypt\nverify hash"}
+    BCRYPT -- "Invalid" --> LOGIN_SCREEN
+    BCRYPT -- "Valid" --> ACTIVE{"IsActive\n= true?"}
+    ACTIVE -- "No (pending)" --> LOGIN_SCREEN
+    ACTIVE -- "Yes" --> SESSION["Store UserSession\n userId · role · avatar"]
+    SESSION --> ROLE{"UserRole?"}
+    ROLE -- "2 = Admin" --> ADMIN([Admin Dashboard\nFull permissions])
+    ROLE -- "1 = Staff" --> STAFF([Staff Dashboard\nLimited permissions])
+
+    ACT -- "Register" --> FORM["Fill registration form\nname · email · phone · password"]
+    FORM --> VALIDATE{"Check duplicates\nemail · phone · username"}
+    VALIDATE -- "Duplicate found" --> FORM
+    VALIDATE -- "OK" --> PENDING["Create user\nIsActive = false\nUserRole = 1"]
+    PENDING --> WAIT["Waiting for Admin\napproval"]
+    WAIT --> APPROVE{"Admin reviews\nin Personnel panel"}
+    APPROVE -- "Activate" --> ACTIVE
+    APPROVE -- "Reject/Delete" --> DELETED["Account removed"]
+
+    ADMIN --> MENU_PERM["Menu.setupPermissions\nAll modules visible"]
+    STAFF --> MENU_PERM2["Menu.setupPermissions\nRestricted modules hidden"]
+
+    style ADMIN fill:#27174a,color:#c4a0ff,stroke:#c4a0ff
+    style STAFF fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+    style PENDING fill:#27174a,color:#c4a0ff,stroke:#c4a0ff
+    style SESSION fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style DELETED fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. BOOK RENTAL FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="rental">
+  <h2>📖 Book Rental Flow <span class="badge badge-staff">Staff</span></h2>
+  <div class="mermaid">
+flowchart TD
+    STAFF([Staff opens\nBook Rental tab]) --> FIND_STU["Search student\nby StudentCode"]
+    FIND_STU --> STU_EXIST{"Student\nfound?"}
+    STU_EXIST -- "No" --> FIND_STU
+    STU_EXIST -- "Yes" --> SHOW_STU["Display student info\nname · card · borrow stats"]
+
+    SHOW_STU --> FIND_BOOK["Search / browse books\nfilter by category · in-stock only"]
+    FIND_BOOK --> QR_OPT{"Use QR\nscanner?"}
+    QR_OPT -- "Yes" --> SCAN["DroidCamCapture\nor webcam QR scan"]
+    SCAN --> ZXING["ZXing decodes\nbook barcode"]
+    ZXING --> ADD_CART
+    QR_OPT -- "No" --> MANUAL_SEL["Select book\nfrom table list"]
+    MANUAL_SEL --> ADD_CART["Add book to borrow cart\n+ enter rental days"]
+
+    ADD_CART --> DAYS["System calculates\nDueReturnDate\n= BorrowDate + Days"]
+    DAYS --> PRICE_CALC["Calculate cost\nrentalPrice × quantity × days\n+ deposit (depositPercentage)"]
+    PRICE_CALC --> REVIEW["Review order\nin BookRentalDialog"]
+    REVIEW --> PAY["Open CashPaymentDialog\nenter amount given"]
+    PAY --> CHANGE["System computes\nchange amount"]
+    CHANGE --> CONFIRM["Confirm transaction"]
+
+    CONFIRM --> SAVE_PAY["PaymentDao.insert\nPayment record"]
+    SAVE_PAY --> SAVE_REC["BorrowRecordsDao.insert\nStatus = Borrowed"]
+    SAVE_REC --> STOCK_DOWN["BookManagementDao\ndecrease StockQuantity"]
+    STOCK_DOWN --> STATS_UP["StudentDao\nupdate TotalBooksRented +1"]
+    STATS_UP --> CHART_RELOAD["Reload Chart\nweekly borrow stats"]
+    CHART_RELOAD --> DONE([Rental Complete])
+
+    style DONE fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style ZXING fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+    style SAVE_PAY fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. BOOK RETURN & FINE FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="return">
+  <h2>↩️ Book Return &amp; Fine Calculation Flow <span class="badge badge-staff">Staff</span></h2>
+  <div class="mermaid">
+flowchart TD
+    STAFF([Staff opens\nReturn tab]) --> BROWSE["Browse active\nborrow records\nStatus = Borrowed"]
+    BROWSE --> SELECT_REC["Select record\nto return"]
+    SELECT_REC --> OPEN_DIALOG["Open BookReturnDialog"]
+
+    OPEN_DIALOG --> DATE_CHECK{"Today vs\nDueReturnDate"}
+    DATE_CHECK -- "On time" --> FINE_ZERO["FineAmount = 0"]
+    DATE_CHECK -- "Overdue" --> CALC_FINE["Calculate fine\nDaysLate × RentalPrice\n× fineMultiplier"]
+    CALC_FINE --> FINE_SET["Set FineAmount\non record"]
+    FINE_ZERO --> CONDITION
+    FINE_SET --> CONDITION
+
+    CONDITION{"Book\ncondition?"}
+    CONDITION -- "Good" --> UPDATE_REC["BorrowRecordsDao.update\nStatus = Returned\nActualReturnDate = Today"]
+    CONDITION -- "Damaged" --> LOG_DAMAGE["DamageDao.insert\ndescription · severity\nrepairCost"]
+    LOG_DAMAGE --> UPDATE_REC
+
+    UPDATE_REC --> STOCK_UP["BookManagementDao\nStockQuantity + returned qty"]
+    STOCK_UP --> LATE_STATS{"Was\noverdue?"}
+    LATE_STATS -- "Yes" --> INC_LATE["StudentDao\nLateReturnsCount + 1"]
+    LATE_STATS -- "No" --> FINE_CHECK
+    INC_LATE --> FINE_CHECK
+
+    FINE_CHECK{"Fine\namount > 0?"}
+    FINE_CHECK -- "Yes" --> FINE_PAY["Open PayOutDateDialog\ncollect fine payment"]
+    FINE_PAY --> SAVE_FINE["PaymentDao.insert\nfine payment record"]
+    FINE_CHECK -- "No" --> COMPLETE
+    SAVE_FINE --> COMPLETE([Return Complete])
+
+    style COMPLETE fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style CALC_FINE fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+    style LOG_DAMAGE fill:#3d2210,color:#ffb36a,stroke:#ffa040
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. PAYMENT FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="payment">
+  <h2>💳 Payment Flow <span class="badge badge-payment">Payment</span></h2>
+  <div class="mermaid">
+flowchart LR
+    TYPE{"Payment\nScenario"}
+
+    TYPE -- "New Rental" --> R_CALC["rentalPrice × qty × days\n+ depositAmount"]
+    R_CALC --> CASH_DLG["CashPaymentDialog\nenter cash given"]
+    CASH_DLG --> CHANGE_R["change = given − total"]
+    CHANGE_R --> R_SAVE["PaymentDao.insert\nmethod = Cash\namountGiven · changeAmount"]
+
+    TYPE -- "Overdue Fine" --> F_CALC["daysLate × rentalPrice\n× fineMultiplier"]
+    F_CALC --> PAY_OUT["PayOutDateDialog"]
+    PAY_OUT --> CHANGE_F["change = given − fine"]
+    CHANGE_F --> F_SAVE["PaymentDao.insert\nfinePayment record"]
+
+    TYPE -- "Damage Fee" --> D_CALC["repairCost assessed\nby staff"]
+    D_CALC --> PAY_DAM["PayDameDialog"]
+    PAY_DAM --> D_SAVE["PaymentDao.insert\ndamage payment"]
+
+    R_SAVE --> LINK["Link PaymentID\nto BorrowRecord"]
+    F_SAVE --> LINK
+    D_SAVE --> LINK
+    LINK --> HISTORY["Payment history\nstored in Payments table"]
+
+    style R_SAVE fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style F_SAVE fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+    style D_SAVE fill:#3d2210,color:#ffb36a,stroke:#ffa040
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. BOOK MANAGEMENT FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="book">
+  <h2>📦 Book Management Flow <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+flowchart TD
+    BM([Book Management\npanel]) --> LIST_B["Load book list\nJOIN Author + Publisher\n+ Location + avg Rating"]
+    LIST_B --> FILTER["Filter by category\nor search by title / ISBN"]
+
+    FILTER --> ACTION{"Action"}
+
+    ACTION -- "Add" --> ADD_DLG["AddBookManagement dialog\ntitle · ISBN · author · publisher\nprice · rentalPrice · quantity\ndepositPct · fineMultiplier\nimage · description"]
+    ADD_DLG --> SEL_SHELF["SelectShelfDialog\nchoose Floor → Row → Shelf → Level"]
+    SEL_SHELF --> ADD_AUTHOR{"New author?"}
+    ADD_AUTHOR -- "Yes" --> ADD_AU_DLG["AddAuthorDialog\nname · dob · nationality"]
+    ADD_AUTHOR -- "No" --> ADD_PUB
+    ADD_AU_DLG --> ADD_PUB{"New publisher?"}
+    ADD_PUB -- "Yes" --> ADD_PUB_DLG["AddPublisherDialog\nname · address · phone · email"]
+    ADD_PUB -- "No" --> ADD_CAT
+    ADD_PUB_DLG --> ADD_CAT{"New category?"}
+    ADD_CAT -- "Yes" --> ADD_CAT_DLG["AddCategoriesDialog"]
+    ADD_CAT -- "No" --> SAVE_BOOK
+    ADD_CAT_DLG --> SAVE_BOOK["BookManagementDao.insert\n+ BookLocations record"]
+
+    ACTION -- "Edit" --> EDIT_DLG["BookManagementEdit dialog\nupdate any field\nreassign location"]
+    EDIT_DLG --> SAVE_EDIT["BookManagementDao.update"]
+
+    ACTION -- "Delete" --> SOFT_DEL["isDeleted = true\nsoft delete"]
+    SOFT_DEL --> RECYCLE["Moved to Recycle Bin"]
+
+    ACTION -- "View" --> VIEW_DLG["BookManagementViewDialog\nfull details · rating · reviews"]
+
+    ACTION -- "Export Excel" --> EXPORT["Apache POI\nXSSFWorkbook\nexport .xlsx file"]
+
+    ACTION -- "Generate QR" --> QR_GEN["QRCodeGeneratorPanel\nZXing encode bookID → QR image\nstored in qrcodes.json"]
+
+    SAVE_BOOK --> RELOAD["Refresh table\n20 rows per page"]
+    SAVE_EDIT --> RELOAD
+
+    style SAVE_BOOK fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style EXPORT fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+    style QR_GEN fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+    style SOFT_DEL fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. STUDENT MANAGEMENT FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="student">
+  <h2>🎓 Student Management Flow <span class="badge badge-staff">Staff / Admin</span></h2>
+  <div class="mermaid">
+flowchart TD
+    SM([Student Management\npanel]) --> LOAD["Load student list\n15 rows per page"]
+    LOAD --> STATS_CARDS["Summary cards:\nTotal students · Late returns\nDamaged books"]
+
+    LOAD --> ACT{"Action"}
+
+    ACT -- "Add" --> ADD_STU["AddStudent dialog\nstudentCode · fullName\nDOB · gender · email\nphone · school · year"]
+    ADD_STU --> DUP_CHK{"Check\nduplicates"}
+    DUP_CHK -- "Code / Email / Phone\nexists" --> ADD_STU
+    DUP_CHK -- "OK" --> SAVE_STU["StudentDao.insert\ncreatedBy = UserSession.userId"]
+    SAVE_STU --> RELOAD_L["Refresh list"]
+
+    ACT -- "Edit" --> EDIT_STU["StudentEdit dialog\nupdate info\nstored procedure updateStudent"]
+    EDIT_STU --> SAVE_EDIT["StudentDao.update"]
+    SAVE_EDIT --> RELOAD_L
+
+    ACT -- "Delete" --> SOFT_DEL_S["isDeleted = true\nSP: deleteStu"]
+    SOFT_DEL_S --> BIN_S["Moved to Recycle Bin"]
+
+    ACT -- "View" --> VIEW_STU["StudentViewDialog\nborrow history · fines\nstatistics overview"]
+
+    ACT -- "Export" --> XLS["Apache POI export\nstudent list .xlsx"]
+
+    ACT -- "Search" --> SEARCH_S["Filter by name\nor studentCode"]
+    SEARCH_S --> RELOAD_L
+
+    RELOAD_L --> STAT_UPDATE["Auto-update\nsummary cards"]
+
+    style SAVE_STU fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style XLS fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+    style SOFT_DEL_S fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 7. WAREHOUSE & QR FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="warehouse">
+  <h2>🏭 Warehouse &amp; QR Inventory Flow <span class="badge badge-admin">Admin / Warehouse</span></h2>
+  <div class="mermaid">
+flowchart TD
+    WH([WareHouse panel]) --> IN["In-Stock books list\nStockQuantity > 0"]
+    WH --> OUT["Out-of-Stock list\nStockQuantity = 0"]
+    WH --> QR_SCAN["QR Scanner option"]
+
+    IN --> SEL_IN["Select books\nto restock"]
+    OUT --> SEL_OUT["Select out-of-stock\nbooks to restore"]
+
+    SEL_IN --> QTY_IN["Enter quantity\nto add"]
+    SEL_OUT --> QTY_OUT["Enter quantity\nto restore"]
+    QTY_IN --> UPDATE_STOCK
+    QTY_OUT --> UPDATE_STOCK["BookManagementDao.update\nStockQuantity += entered qty\nstockIn log updated"]
+
+    QR_SCAN --> CAM_TYPE{"Camera\nsource"}
+    CAM_TYPE -- "Webcam" --> WEBCAM["JavaCV / OpenCV\nframe capture"]
+    CAM_TYPE -- "Phone" --> DROIDCAM["DroidCamCapture\nHTTP stream from phone"]
+    WEBCAM --> ZXING_W["ZXing BarcodeReader\ndecodes QR frame"]
+    DROIDCAM --> ZXING_W
+    ZXING_W --> BOOK_ID["Extract bookID\nfrom QR payload"]
+    BOOK_ID --> LOOKUP["BookManagementDao\ngetBookById(id)"]
+    LOOKUP --> VERIFY["Display book info\nverify before update"]
+    VERIFY --> UPDATE_STOCK
+
+    UPDATE_STOCK --> LOG_JSON["Update qrcodes.json\nQR code registry"]
+    LOG_JSON --> RELOAD_WH["Refresh WareHouse table"]
+
+    style UPDATE_STOCK fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style ZXING_W fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+    style DROIDCAM fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 8. LOCATION MANAGEMENT FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="location">
+  <h2>📍 Location Management Flow <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+flowchart LR
+    ADMIN([Admin]) --> FLOOR["Add Floor\nAddFloorDialog\nfloor number · name"]
+    FLOOR --> ROW["Configure Rows\nwithin that floor"]
+    ROW --> SHELF["Create Shelves\nin each row"]
+    SHELF --> LEVEL["Create Shelf Levels\nupper · middle · lower"]
+    LEVEL --> ASSIGN["Assign book to position\nBookLocationDialog\nbook → ShelfLevel · quantity"]
+
+    ASSIGN --> BKLOC[("BookLocations\nBookID + ShelfLevelID\n+ Quantity")]
+
+    BKLOC --> SEARCH_LOC["Search book\nby location"]
+    SEARCH_LOC --> DISPLAY["Display:\nFloor → Row → Shelf → Level → Book"]
+
+    FLOOR --> FLOORS_T[("Floors")]
+    ROW --> ROWS_T[("Rows")]
+    SHELF --> SHELVES_T[("Shelves")]
+    LEVEL --> LEVELS_T[("ShelfLevels")]
+
+    FLOORS_T --- ROWS_T --- SHELVES_T --- LEVELS_T --- BKLOC
+
+    style BKLOC fill:#1d2d50,color:#9ab8f0,stroke:#4a6aaa
+    style FLOORS_T fill:#1d2d50,color:#9ab8f0,stroke:#4a6aaa
+    style ROWS_T fill:#1d2d50,color:#9ab8f0,stroke:#4a6aaa
+    style SHELVES_T fill:#1d2d50,color:#9ab8f0,stroke:#4a6aaa
+    style LEVELS_T fill:#1d2d50,color:#9ab8f0,stroke:#4a6aaa
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 9. DAMAGE & RECYCLE FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="damage">
+  <h2>🔧 Damage &amp; Recycle Workflow <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+flowchart TD
+    TRIGGER{"Damage\ntrigger"}
+
+    TRIGGER -- "During return" --> RET["Staff reports damage\nin BookReturnDialog"]
+    TRIGGER -- "Direct report" --> DAM["Open Damage module\nDamageDao.insert"]
+    RET --> DAM
+
+    DAM --> SEV{"Severity\nlevel"}
+    SEV -- "Low" --> P_LOW["Status = Pending\nminor cosmetic"]
+    SEV -- "Medium" --> P_MED["Status = Pending\npartial damage"]
+    SEV -- "High" --> P_HIGH["Status = Pending\nheavily damaged"]
+
+    P_LOW --> REPAIR
+    P_MED --> REPAIR
+    P_HIGH --> REPAIR
+
+    REPAIR["Admin starts repair\nStatus = Under Repair\nenter repairCost"] --> RESULT{"Repair\noutcome"}
+    RESULT -- "Fixed" --> REPLACED["Status = Replaced\nbook returns to stock"]
+    RESULT -- "Irreparable" --> DISCARD["Status = Discarded\nbook removed permanently"]
+
+    REPLACED --> CHARGE["Charge student\nPayDameDialog"]
+    DISCARD --> CHARGE
+
+    CHARGE --> DAM_PAY["PaymentDao.insert\ndamage payment record"]
+    DAM_PAY --> STATS_DAM["StudentDao\ndamagedBooksCount + 1"]
+
+    BIN_SECTION([Recycle Bin]) --> RB_TABS{"Category"}
+    RB_TABS -- "Deleted students" --> STU_BIN["Soft-deleted\nstudent list\nisDeleted = true"]
+    RB_TABS -- "Deleted books" --> BOOK_BIN["Soft-deleted\nbook list\nisDeleted = true"]
+
+    STU_BIN --> RB_ACT{"Action"}
+    BOOK_BIN --> RB_ACT
+    RB_ACT -- "Restore" --> RESTORE["isDeleted = false\nrecord returns to module"]
+    RB_ACT -- "Delete permanently" --> HARD_DEL["DELETE FROM table\nirreversible"]
+
+    style REPLACED fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style DISCARD fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+    style HARD_DEL fill:#3d1515,color:#ff8a8a,stroke:#ff6b6b
+    style REPAIR fill:#3d2210,color:#ffb36a,stroke:#ffa040
+    style DAM_PAY fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 10. CHARTS & REPORTS FLOW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="chart">
+  <h2>📊 Charts &amp; Reports Flow <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+flowchart TD
+    CHART([Chart Dashboard]) --> SELECT_MONTH["Select month + year\nComboBox"]
+    SELECT_MONTH --> LOAD_DATA["ChartDao queries\nSQL Server"]
+
+    LOAD_DATA --> WEEKLY["getWeeklyBorrowStats\ngroup by week number"]
+    LOAD_DATA --> CATEGORY["getCategoryStats\nbooks per category"]
+    LOAD_DATA --> REVENUE["getWeeklyRevenue\nsum payments per week"]
+
+    WEEKLY --> BAR["Custom Bar Chart\nX = Week · Y = borrow count\ncolor gradient + hover tooltip"]
+    CATEGORY --> PIE["Custom Pie Chart\neach slice = category %\nhover shows label + count"]
+    REVENUE --> LINE["Custom Line Chart\nX = Week · Y = revenue (VND)\nsmooth curve"]
+
+    BAR --> RENDER["Render on JPanel\nGraphics2D drawing\nantialiasing + shadow"]
+    PIE --> RENDER
+    LINE --> RENDER
+
+    CHART --> JASPER["JasperReports\ngenerate printable report\n.jrxml template → PDF / XLS"]
+    JASPER --> EXPORT_R["Export report\n.pdf or .xlsx"]
+
+    RENDER --> DISPLAY([Display to user])
+    EXPORT_R --> DISPLAY
+
+    style BAR fill:#142a47,color:#7cc7ff,stroke:#7cc7ff
+    style PIE fill:#27174a,color:#c4a0ff,stroke:#c4a0ff
+    style LINE fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style JASPER fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 11. ADMIN MODULE OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="admin">
+  <h2>🛠️ Admin Module Overview &amp; Permissions <span class="badge badge-admin">Admin</span></h2>
+  <div class="mermaid">
+flowchart TD
+    DASH([Library Dashboard\nMain.java 1400×850]) --> MENU["Left Menu Panel\nMenu.java · 215px\nsetupPermissions by role"]
+
+    MENU --> |"Admin + Staff"| RENTAL_M["Book Rental / Return"]
+    MENU --> |"Admin + Staff"| STUDENT_M["Student Management"]
+    MENU --> |"Admin + Staff"| BOOK_M["Book Management"]
+    MENU --> |"Admin + Staff"| AUTHOR_M["Authors / Publishers / Categories"]
+    MENU --> |"Admin + Staff"| RATING_M["Book Ratings &amp; Reviews"]
+    MENU --> |"Admin + Staff"| HIST_M["Borrow History"]
+
+    MENU --> |"Admin only"| PERSON_M["Personnel Management\nApprove / activate users"]
+    MENU --> |"Admin only"| WARE_M["Warehouse"]
+    MENU --> |"Admin only"| LOC_M["Location Management"]
+    MENU --> |"Admin only"| DMG_M["Damage Management"]
+    MENU --> |"Admin only"| BIN_M["Recycle Bin"]
+    MENU --> |"Admin only"| CHART_M["Charts &amp; Reports"]
+    MENU --> |"Admin only"| ORDER_M["Order Management"]
+
+    PERSON_M --> APPROVE_U["Review pending\nregistrations"]
+    PERSON_M --> TOGGLE_U["Enable / Disable accounts"]
+    PERSON_M --> PWD_U["Reset passwords"]
+
+    CHART_M --> STATS_C["Weekly borrow trends\nCategory distribution\nRevenue line chart"]
+    CHART_M --> JASPER_C["JasperReports export\nPDF / Excel"]
+
+    style DASH fill:#27174a,color:#c4a0ff,stroke:#c4a0ff
+    style MENU fill:#1a2540,color:#9ab8f0,stroke:#4a6aaa
+    style STATS_C fill:#122e22,color:#63e6a7,stroke:#63e6a7
+    style JASPER_C fill:#3a2c0e,color:#ffd46a,stroke:#ffd46a
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 12. DATABASE ER DIAGRAM -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section" id="db">
+  <h2>🗄️ Database Relationships <span class="badge badge-data">Data</span></h2>
+  <div class="mermaid">
+erDiagram
+    USERS {
+        int UserID PK
+        string FullName
+        string Username
+        string Email
+        string Password
+        int UserRole
+        bool IsActive
+        bool IsDeleted
+        string Avatar
+    }
+    STUDENTS {
+        int StudentID PK
+        string StudentCode
+        string FullName
+        date DateOfBirth
+        string Gender
+        string Email
+        string PhoneNumber
+        int TotalBooksRented
+        int LateReturnsCount
+        int DamagedBooksCount
+        bool IsDeleted
+    }
+    BOOKS {
+        int BookID PK
+        string Title
+        string ISBN
+        int AuthorID FK
+        int PublisherID FK
+        int Quantity
+        int StockQuantity
+        decimal Price
+        decimal RentalPrice
+        decimal DepositPercentage
+        decimal FineMultiplier
+        bool IsRental
+        bool IsDeleted
+    }
+    AUTHORS {
+        int AuthorID PK
+        string FullName
+        date DateOfBirth
+        string Nationality
+        bool IsDeleted
+    }
+    PUBLISHERS {
+        int PublisherID PK
+        string Name
+        string Address
+        string PhoneNumber
+        string Email
+        bool IsDeleted
+    }
+    CATEGORIES {
+        int CategoryID PK
+        string CategoryName
+        bool IsDeleted
+    }
+    BOOKCATEGORIES {
+        int BookID FK
+        int CategoryID FK
+    }
+    BORROWRECORDS {
+        int RecordID PK
+        int StudentID FK
+        int BookID FK
+        int PaymentID FK
+        int Quantity
+        date BorrowDate
+        date DueReturnDate
+        date ActualReturnDate
+        string Status
+        decimal FineAmount
+        decimal BorrowPrice
+        int NumberOfDays
+    }
+    PAYMENTS {
+        int PaymentID PK
+        int UserID FK
+        int StudentID FK
+        decimal Amount
+        date PaymentDate
+        string PaymentMethod
+        decimal AmountGiven
+        decimal ChangeAmount
+    }
+    BOOKREVIEWS {
+        int ReviewID PK
+        int BookID FK
+        int StudentID FK
+        int Rating
+        string Comment
+    }
+    DAMAGES {
+        int DamageID PK
+        int BookID FK
+        int StudentID FK
+        date DamageDate
+        string Description
+        string Severity
+        string Status
+        decimal RepairCost
+    }
+    FLOORS {
+        int FloorID PK
+        int FloorNumber
+        string Name
+    }
+    ROWS {
+        int RowID PK
+        int FloorID FK
+        string RowName
+    }
+    SHELVES {
+        int ShelfID PK
+        int RowID FK
+        string ShelfName
+    }
+    SHELFLEVELS {
+        int ShelfLevelID PK
+        int ShelfID FK
+        string LevelName
+    }
+    BOOKLOCATIONS {
+        int BookLocationID PK
+        int BookID FK
+        int ShelfLevelID FK
+        int Quantity
+    }
+
+    USERS ||--o{ PAYMENTS : "processed by"
+    USERS ||--o{ STUDENTS : "created by"
+    STUDENTS ||--o{ PAYMENTS : "makes"
+    STUDENTS ||--o{ BORROWRECORDS : "has"
+    STUDENTS ||--o{ BOOKREVIEWS : "writes"
+    STUDENTS ||--o{ DAMAGES : "reported by"
+    BOOKS ||--o{ BORROWRECORDS : "borrowed in"
+    BOOKS ||--o{ BOOKREVIEWS : "reviewed in"
+    BOOKS ||--o{ DAMAGES : "damage cases"
+    BOOKS ||--o{ BOOKLOCATIONS : "stored in"
+    BOOKS }o--|| AUTHORS : "written by"
+    BOOKS }o--|| PUBLISHERS : "published by"
+    BOOKS }o--o{ CATEGORIES : "via BOOKCATEGORIES"
+    PAYMENTS ||--o{ BORROWRECORDS : "pays for"
+    FLOORS ||--o{ ROWS : "contains"
+    ROWS ||--o{ SHELVES : "contains"
+    SHELVES ||--o{ SHELFLEVELS : "contains"
+    SHELFLEVELS ||--o{ BOOKLOCATIONS : "holds"
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ORDER LIFECYCLE STATE DIAGRAM -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <h2>🔄 Borrow Record Lifecycle <span class="badge badge-system">System</span></h2>
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> Borrowed : Staff creates rental
+    Borrowed --> Returned : Normal return
+    Borrowed --> Overdue : Past DueReturnDate
+    Overdue --> Returned : Late return + fine paid
+    Returned --> [*]
+
+    state Returned {
+        [*] --> OnTime : No fine
+        [*] --> WithFine : Fine collected
+        [*] --> WithDamage : Damage recorded
+        OnTime --> [*]
+        WithFine --> [*]
+        WithDamage --> [*]
+    }
+
+    note right of Borrowed
+        Status = Borrowed
+        StockQuantity decreased
+        Payment created
+    end note
+
+    note right of Returned
+        Status = Returned
+        StockQuantity restored
+        BorrowHistory updated
+    end note
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#111827',
+      primaryTextColor: '#dce4f5',
+      primaryBorderColor: '#2a3d60',
+      lineColor: '#4a6090',
+      secondaryColor: '#162236',
+      tertiaryColor: '#0c1220',
+      background: '#0b0f1c',
+      mainBkg: '#111827',
+      nodeBorder: '#2a3d60',
+      clusterBkg: '#0e1628',
+      titleColor: '#dce4f5',
+      edgeLabelBackground: '#0e1628',
+      fontFamily: 'Segoe UI, sans-serif',
+      stateDiagramRankDir: 'LR',
+    },
+    flowchart: { curve: 'basis', padding: 20 },
+    er: { useMaxWidth: true },
+    state: { useMaxWidth: true },
+  });
+</script>
+</body>
+</html>
