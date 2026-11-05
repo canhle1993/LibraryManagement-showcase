@@ -1,5 +1,7 @@
 # Library Management Showcase
 
+![Java 21](https://img.shields.io/badge/Java%2021-ED8B00?style=flat-square&logo=openjdk&logoColor=white) ![Java Swing](https://img.shields.io/badge/Java%20Swing-5382A1?style=flat-square&logo=openjdk&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-C71A36?style=flat-square&logo=apachemaven&logoColor=white) ![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=flat-square) ![JasperReports](https://img.shields.io/badge/JasperReports-2A6EBB?style=flat-square) ![ZXing QR](https://img.shields.io/badge/ZXing%20QR-333333?style=flat-square) ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white)
+
 ![Library Management Cover](docs/screenshots/repo-cover.png)
 
 Public showcase repository for the **Library Management System** desktop project.
@@ -27,6 +29,7 @@ Public showcase repository for the **Library Management System** desktop project
 - [Repository Structure](#repository-structure)
 - [Private Source Code Note](#private-source-code-note)
 - [Supporting Documents](#supporting-documents)
+- [Author](#author)
 
 ## Overview
 
@@ -773,3 +776,13 @@ If you would like a deeper walkthrough, I can provide:
 - Project summary: [portfolio/project-summary.md](portfolio/project-summary.md)
 - Responsibilities: [portfolio/responsibilities.md](portfolio/responsibilities.md)
 - Challenges and solutions: [portfolio/challenges-and-solutions.md](portfolio/challenges-and-solutions.md)
+
+## Author
+
+**Lê Văn Cảnh** · Java Full-Stack Developer · Ho Chi Minh City, Vietnam
+
+- Portfolio: [canhle1993.github.io/canhle-portfolio](https://canhle1993.github.io/canhle-portfolio/)
+- Email: [aplevancanh1993@gmail.com](mailto:aplevancanh1993@gmail.com)
+- GitHub: [@canhle1993](https://github.com/canhle1993)
+
+Happy to walk through the private source code, architecture decisions and my part of the work in an interview.
