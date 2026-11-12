@@ -781,7 +781,7 @@ If you would like a deeper walkthrough, I can provide:
 
 **Lê Văn Cảnh** · Java Full-Stack Developer · Ho Chi Minh City, Vietnam
 
-- Portfolio: [canhle1993.github.io/canhle-portfolio](https://canhle1993.github.io/canhle-portfolio/)
+- Portfolio: [canhle.pages.dev](https://canhle.pages.dev/)
 - Email: [aplevancanh1993@gmail.com](mailto:aplevancanh1993@gmail.com)
 - GitHub: [@canhle1993](https://github.com/canhle1993)
 
